@@ -2,14 +2,21 @@ import { useState, useEffect } from 'react';
 import { compileCode, checkHealth, type CompileResponse } from './api';
 import './App.css';
 
+interface Token {
+  type: string;
+  value: string;
+  line: number;
+  column: number;
+}
+
 function App() {
-  const [code, setCode] = useState('gambiarra abre-te-sesamo stonks x receba 10 br fecha-te-sesamo');
+  const [code, setCode] = useState('gambiarra abre-te-sesamo\n  stonks x receba 10 br\nfecha-te-sesamo');
   const [result, setResult] = useState<CompileResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
   const [checkingConnection, setCheckingConnection] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
-  // verifica a conexao com compilador
   useEffect(() => {
     const checkConnection = async () => {
       const isConnected = await checkHealth();
@@ -18,7 +25,7 @@ function App() {
     };
 
     checkConnection();
-    const interval = setInterval(checkConnection, 3000);
+    const interval = setInterval(checkConnection, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -39,96 +46,152 @@ function App() {
   };
 
   const lineCount = code.split('\n').length;
+  const charCount = code.length;
 
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
       <header className="header">
         <div className="header-left">
-          <h1>🎯 BrCompiler IDE</h1>
-          <span className="version">v1.0</span>
+          <div className="logo">
+            <span className="logo-icon">⚙️</span>
+            <div className="logo-text">
+              <h1>BrCompiler</h1>
+              <span className="tagline">Compilador de Linguagem Coloquial Brasileira</span>
+            </div>
+          </div>
         </div>
-        <div className={`status ${connected ? 'connected' : checkingConnection ? 'checking' : 'disconnected'}`}>
-          {checkingConnection ? (
-            <>⏳ Verificando...</>
-          ) : connected ? (
-            <>Conectado ao compilador</>
-          ) : (
-            <> Desconectado: inicie CompilerRestServer no eclipse</>
-          )}
+        
+        <div className="header-right">
+          <button 
+            className={`theme-toggle ${theme}`}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title="Alternar tema"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          
+          <div className={`status-indicator ${connected ? 'connected' : 'disconnected'}`}>
+            <span className="status-dot"></span>
+            <span className="status-text">
+              {checkingConnection ? 'Verificando...' : connected ? 'Conectado' : 'Desconectado'}
+            </span>
+          </div>
         </div>
       </header>
 
-      <main className="main">
-        <div className="editor-container">
+      <main className="container">
+        <div className="editor-panel">
           <div className="panel-header">
-            <h2>📝 Codigo Fonte</h2>
-            <span className="char-count">{code.length} caracteres</span>
+            <h2>Código Fonte</h2>
+            <div className="panel-info">
+              <span className="info-badge">{lineCount} linhas</span>
+              <span className="info-badge">{charCount} caracteres</span>
+            </div>
           </div>
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Digite código BrCompiler aqui..."
-            className="editor"
-            disabled={!connected}
-          />
+          
+          <div className="editor-wrapper">
+            <div className="line-numbers">
+              {Array.from({ length: lineCount }, (_, i) => (
+                <div key={i + 1} className="line-number">{i + 1}</div>
+              ))}
+            </div>
+            
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Comece a digitar seu código BrCompiler aqui..."
+              className="code-editor"
+              disabled={!connected}
+              spellCheck="false"
+            />
+          </div>
+          
           <div className="editor-footer">
-            <span>📄 {lineCount} linhas</span>
-            <span className="hint">Ctrl+Enter para compilar</span>
+            <div className="footer-info">
+              <span>Tab size: 2 espaços</span>
+              <span>Encoding: UTF-8</span>
+            </div>
+            <span className="shortcut-hint">Ctrl+Enter para compilar</span>
           </div>
         </div>
 
-        <div className="actions">
+        <div className="button-group">
           <button
             onClick={handleCompile}
             disabled={loading || !connected}
-            className={`compile-btn ${loading ? 'loading' : ''}`}
+            className={`btn-compile ${loading ? 'loading' : ''}`}
           >
-            {loading ? (
-              <>⏳ Compilando...</>
-            ) : (
-              <>▶️ Compilar</>
-            )}
+            {loading ? 'Compilando...' : 'Compilar'}
+          </button>
+          <button
+            onClick={() => setCode('')}
+            className="btn-clear"
+            disabled={!connected}
+          >
+            Limpar
           </button>
         </div>
 
-        <div className="result-container">
+        <div className="result-panel">
           <div className="panel-header">
-            <h2>📋 Resultado</h2>
+            <h2>Resultado da Compilação</h2>
           </div>
+          
           <div className="result-content">
             {result ? (
-              <div className={`result ${result.success ? 'success' : 'error'}`}>
-                {result.success ? (
-                  <>
-                    <div className="result-icon">✅</div>
-                    <h3>Compilação Bem-Sucedida!</h3>
-                    <p className="message">{result.message}</p>
-                    {result.lines && (
-                      <p className="info">📊 {result.lines} linhas compiladas</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="result-icon">❌</div>
-                    <h3>Erro na Compilação</h3>
-                    <p className="error-message">{result.error}</p>
-                    {result.line && (
-                      <p className="location">
-                        📍 Linha {result.line}, Coluna {result.column}
-                      </p>
-                    )}
-                  </>
-                )}
+              <div className={`result-box ${result.success ? 'success' : 'error'}`}>
+                <div className="result-header">
+                  <span className="result-icon">
+                    {result.success ? '✓' : '✕'}
+                  </span>
+                  <h3>
+                    {result.success ? 'Compilação Bem-Sucedida' : 'Erro na Compilação'}
+                  </h3>
+                </div>
+                
+                <div className="result-body">
+                  {result.success ? (
+                    <>
+                      <p className="result-message">{result.message}</p>
+                      {result.lines && (
+                        <div className="result-detail">
+                          <strong>Linhas compiladas:</strong> {result.lines}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <pre className="error-message">{result.error}</pre>
+                      {result.line && (
+                        <div className="error-location">
+                          <strong>Posição:</strong> Linha {result.line}, Coluna {result.column}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="placeholder">
-                <p>Clique em "Compilar" ou pressione Ctrl+Enter para analisar o código</p>
+                <div className="placeholder-icon">📋</div>
+                <p>Clique em "Compilar" ou pressione <kbd>Ctrl+Enter</kbd></p>
+                <p className="placeholder-subtext">O resultado da compilação aparecerá aqui</p>
               </div>
             )}
           </div>
         </div>
       </main>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <span>BrCompiler v1.0</span>
+          <span>•</span>
+          <span>Servidor: localhost:8085</span>
+          <span>•</span>
+          <span>IDE: React + TypeScript</span>
+        </div>
+      </footer>
     </div>
   );
 }
