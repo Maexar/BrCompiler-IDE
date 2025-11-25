@@ -1,13 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { compileCode, checkHealth, type CompileResponse } from './api';
 import './App.css';
-
-interface Token {
-  type: string;
-  value: string;
-  line: number;
-  column: number;
-}
 
 function App() {
   const [code, setCode] = useState('gambiarra abre-te-sesamo\n  stonks x receba 10 br\nfecha-te-sesamo');
@@ -16,6 +9,9 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [checkingConnection, setCheckingConnection] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -42,6 +38,12 @@ function App() {
       if (!loading && connected) {
         handleCompile();
       }
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (lineNumbersRef.current && editorRef.current) {
+      lineNumbersRef.current.scrollTop = editorRef.current.scrollTop;
     }
   };
 
@@ -90,16 +92,18 @@ function App() {
           </div>
           
           <div className="editor-wrapper">
-            <div className="line-numbers">
+            <div className="line-numbers" ref={lineNumbersRef}>
               {Array.from({ length: lineCount }, (_, i) => (
                 <div key={i + 1} className="line-number">{i + 1}</div>
               ))}
             </div>
             
             <textarea
+              ref={editorRef}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={handleKeyDown}
+              onScroll={handleScroll}
               placeholder="Comece a digitar seu código BrCompiler aqui..."
               className="code-editor"
               disabled={!connected}
