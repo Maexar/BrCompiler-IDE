@@ -40,8 +40,9 @@ function App() {
       }
     }
   };
-
-  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+  
+  //underscore (_) significa que a variavel intencionalmente nao sera usada
+  const handleScroll = (_: React.UIEvent<HTMLTextAreaElement>) => {
     if (lineNumbersRef.current && editorRef.current) {
       lineNumbersRef.current.scrollTop = editorRef.current.scrollTop;
     }
