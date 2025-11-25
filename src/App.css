@@ -308,7 +308,7 @@ body {
   margin: 0;
 }
 
-/* Scrollbar customizado */
+/* scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
