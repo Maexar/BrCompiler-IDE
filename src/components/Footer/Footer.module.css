@@ -1,0 +1,15 @@
+.footer {
+  flex-shrink: 0;
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  padding: 0.4rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+}

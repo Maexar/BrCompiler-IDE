@@ -1,0 +1,75 @@
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.editor-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.editor-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dirty-indicator {
+  color: var(--color-warning);
+  font-size: 0.6rem;
+  margin-left: 0.15rem;
+}
+
+.editor-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+
+.code-editor {
+  flex: 1;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border: none;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  overflow: auto;
+  padding: 0;
+}
+
+.code-editor::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.code-editor:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.editor-footer {
+  padding: 0.4rem 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  gap: 0.6rem;
+}

@@ -1,0 +1,18 @@
+.line-numbers {
+  background: var(--color-bg-tertiary);
+  border-right: 1px solid var(--color-border);
+  min-width: 48px;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.line-number {
+  height: calc(var(--font-size) * var(--line-height));
+  padding: 0 0.5rem;
+  color: var(--color-text-secondary);
+  text-align: right;
+}
