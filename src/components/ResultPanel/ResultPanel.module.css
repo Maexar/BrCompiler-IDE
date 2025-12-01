@@ -50,7 +50,7 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 0.65rem;
-  border-bottom: 1px solid inherit;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .result-icon {
@@ -119,4 +119,58 @@
 .placeholder-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
+}
+
+/* Estilos para multiplos erros */
+.multiple-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.error-count {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0.2rem;
+}
+
+.error-item {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.error-number {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.error-detail {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  padding: 0.3rem;
+  border-radius: 3px;
+  background: var(--color-bg-primary);
+}
+
+.error-detail strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* Ajuste para error-message dentro de error-item */
+.error-item .error-message {
+  margin: 0;
+  max-height: 120px;
 }

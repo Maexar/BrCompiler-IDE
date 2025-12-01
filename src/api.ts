@@ -1,3 +1,12 @@
+export interface CompileError {
+  message: string;
+  line: number;
+  column: number;
+  context?: string;
+  foundToken?: string;
+  expectedTokens?: string;
+}
+
 export interface CompileResponse {
   success: boolean;
   message?: string;
@@ -5,6 +14,7 @@ export interface CompileResponse {
   line?: number;
   column?: number;
   lines?: number;
+  errors?: CompileError[]; // NOVA LINHA: array de erros multiplos
 }
 
 const API_URL = "http://localhost:8085/api";

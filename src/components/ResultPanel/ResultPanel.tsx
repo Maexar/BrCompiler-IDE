@@ -42,12 +42,53 @@ export function ResultPanel({ result }: ResultPanelProps) {
                 </>
               ) : (
                 <>
-                  <pre className={styles['error-message']}>{result.error}</pre>
-                  {result.line && (
-                    <div className={styles['error-location']}>
-                      <strong>Posição:</strong> Linha {result.line}, Coluna{' '}
-                      {result.column}
+                  {/* VERIFICACAO: Se existe array de multiplos erros */}
+                  {result.errors && result.errors.length > 0 ? (
+                    <div className={styles['multiple-errors']}>
+                      <div className={styles['error-count']}>
+                        {result.errors.length} erro(s) encontrado(s):
+                      </div>
+                      {result.errors.map((error, index) => (
+                        <div key={index} className={styles['error-item']}>
+                          <div className={styles['error-number']}>
+                            Erro #{index + 1}
+                          </div>
+                          <pre className={styles['error-message']}>
+                            {error.message}
+                          </pre>
+                          <div className={styles['error-location']}>
+                            <strong>Posição:</strong> Linha {error.line}, Coluna{' '}
+                            {error.column}
+                          </div>
+                          {error.context && (
+                            <div className={styles['error-detail']}>
+                              <strong>Contexto:</strong> {error.context}
+                            </div>
+                          )}
+                          {error.foundToken && (
+                            <div className={styles['error-detail']}>
+                              <strong>Token encontrado:</strong> {error.foundToken}
+                            </div>
+                          )}
+                          {error.expectedTokens && (
+                            <div className={styles['error-detail']}>
+                              <strong>Era esperado:</strong> {error.expectedTokens}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    /* MANTIDO: Exibicao de erro unico (lexico ou nao recuperavel) */
+                    <>
+                      <pre className={styles['error-message']}>{result.error}</pre>
+                      {result.line && (
+                        <div className={styles['error-location']}>
+                          <strong>Posição:</strong> Linha {result.line}, Coluna{' '}
+                          {result.column}
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
