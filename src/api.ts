@@ -15,6 +15,7 @@ export interface CompileResponse {
   column?: number;
   lines?: number;
   errors?: CompileError[]; // NOVA LINHA: array de erros multiplos
+  ast?: any;
 }
 
 const API_URL = "http://localhost:8085/api";
@@ -40,6 +41,30 @@ export async function compileCode(code: string): Promise<CompileResponse> {
       success: false,
       error: `Erro ao conectar: ${error}`
     };
+  }
+}
+
+export interface AstResponse {
+  success: boolean;
+  ast?: any;
+  error?: string;
+}
+
+export async function fetchAST(code: string): Promise<AstResponse> {
+  try {
+    const response = await fetch(`${API_URL}/ast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code })
+    });
+
+    if (!response.ok) {
+      return { success: false, error: `Erro HTTP ${response.status}` };
+    }
+
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: `Erro ao conectar: ${error}` };
   }
 }
 

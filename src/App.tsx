@@ -223,7 +223,7 @@ function App() {
               getNameFromPath={getNameFromPath}
             />
 
-            <ResultPanel result={result} />
+            <ResultPanel result={result} code={code} />
           </div>
         </main>
       </div>

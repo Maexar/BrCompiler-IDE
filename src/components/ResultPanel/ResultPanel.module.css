@@ -107,6 +107,32 @@
   overflow-y: auto;
 }
 
+.ast-view {
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-secondary);
+}
+.ast-header {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.ast-header h4 {
+  margin: 0;
+  font-size: 0.78rem;
+}
+.ast-body {
+  padding: 0.5rem;
+  max-height: 320px;
+  overflow: auto;
+}
+.ast-body pre {
+  margin: 0;
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+}
+
 .placeholder {
   height: 100%;
   display: flex;

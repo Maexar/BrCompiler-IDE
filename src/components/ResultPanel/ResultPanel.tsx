@@ -1,11 +1,64 @@
 import styles from './ResultPanel.module.css';
 import type { CompileResponse } from '../../api';
+import AstView from './AstView';
+import { fetchAST } from '../../api';
+import { useState, useEffect } from 'react';
 
 interface ResultPanelProps {
   result: CompileResponse | null;
+  code?: string;
 }
 
-export function ResultPanel({ result }: ResultPanelProps) {
+export function ResultPanel({ result, code }: ResultPanelProps) {
+  const [localAst, setLocalAst] = useState<any | null>(null);
+  const [showAst, setShowAst] = useState(false);
+  const [astLoading, setAstLoading] = useState(false);
+  const [astError, setAstError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // reset when result changes
+    setLocalAst(result?.ast ?? null);
+    setShowAst(false);
+    setAstError(null);
+    setAstLoading(false);
+  }, [result]);
+
+  const handleToggleAst = async () => {
+    const next = !showAst;
+    setShowAst(next);
+    if (next && !localAst) {
+      if (!code) {
+        setAstError('Código não disponível para gerar AST');
+        return;
+      }
+      setAstLoading(true);
+      setAstError(null);
+      try {
+        const resp = await fetchAST(code);
+        if (resp.success) {
+          setLocalAst(resp.ast ?? null);
+        } else {
+          setAstError(resp.error ?? 'Erro ao obter AST');
+        }
+      } catch (e) {
+        setAstError(String(e));
+      } finally {
+        setAstLoading(false);
+      }
+    }
+  };
+
+  const handleDownloadAst = () => {
+    const ast = localAst || result?.ast;
+    if (!ast) return;
+    const blob = new Blob([JSON.stringify(ast, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ast.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
     <div className={styles['result-panel']}>
       <div className={styles['result-header']}>
@@ -39,6 +92,25 @@ export function ResultPanel({ result }: ResultPanelProps) {
                       <strong>Linhas compiladas:</strong> {result.lines}
                     </div>
                   )}
+
+                  <div style={{ marginTop: 12 }}>
+                    <button onClick={handleToggleAst} className={styles['ast-toggle']}>
+                      {showAst ? 'Ocultar árvore' : 'Mostrar árvore'}
+                    </button>
+                    {(localAst || result?.ast) && (
+                      <button onClick={handleDownloadAst} style={{ marginLeft: 8 }} className={styles['ast-download']}>Baixar árvore</button>
+                    )}
+                    {astLoading && <span style={{ marginLeft: 8 }}>Carregando árvore...</span>}
+                    {astError && <div style={{ color: 'var(--color-error)', marginTop: 8 }}>{astError}</div>}
+                    {showAst && (localAst || result?.ast) && (
+                      <div style={{ marginTop: 8 }}>
+                        <AstView ast={localAst || result?.ast} />
+                      </div>
+                    )}
+                    {showAst && !localAst && !result?.ast && !astLoading && !astError && (
+                      <div style={{ marginTop: 8, color: '#666' }}>Nenhuma AST disponível</div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
