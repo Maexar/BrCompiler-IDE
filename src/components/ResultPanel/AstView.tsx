@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import styles from './ResultPanel.module.css';
+import { useState } from 'react';
 
 type Node = any;
 
@@ -15,6 +14,12 @@ const nodeTypeColors: Record<string, string> = {
   StringLiteral: '#22c55e',
   BlockStatement: '#8b5cf6',
   ReturnStatement: '#f97316',
+  // Tipos do BrCompiler
+  ProgramStart: '#8b5cf6',
+  ProgramEnd: '#8b5cf6',
+  BlockOpen: '#3b82f6',
+  BlockClose: '#3b82f6',
+  MainBlock: '#10b981',
 };
 
 function getNodeColor(type: string): string {
@@ -32,7 +37,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
       style={{
         paddingLeft: depth > 0 ? 20 : 0,
         marginTop: depth > 0 ? 6 : 0,
-        borderLeft: depth > 0 ? '2px solid rgba(100, 116, 139, 0.2)' : 'none',
+        borderLeft: depth > 0 ? '2px solid var(--color-border)' : 'none',
       }}
     >
       <div
@@ -48,7 +53,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
         }}
         onClick={() => hasChildren && setOpen(!open)}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(100, 116, 139, 0.08)';
+          e.currentTarget.style.background = 'var(--color-accent-soft)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = 'transparent';
@@ -58,7 +63,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
           <span
             style={{
               fontSize: 12,
-              color: '#94a3b8',
+              color: 'var(--color-text-secondary)',
               width: 16,
               textAlign: 'center',
               userSelect: 'none',
@@ -89,7 +94,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
           <span
             style={{
               fontSize: 13,
-              color: '#475569',
+              color: 'var(--color-text-secondary)',
               fontWeight: 500,
             }}
           >
@@ -101,9 +106,9 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
           <span
             style={{
               fontSize: 12,
-              color: '#059669',
+              color: 'var(--color-success)',
               fontFamily: 'monospace',
-              background: '#f0fdf4',
+              background: 'var(--color-bg-tertiary)',
               padding: '2px 6px',
               borderRadius: 3,
             }}
@@ -116,7 +121,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
           <span
             style={{
               fontSize: 12,
-              color: '#dc2626',
+              color: 'var(--color-error)',
               fontWeight: 600,
             }}
           >
@@ -128,7 +133,7 @@ function AstNode({ node, depth = 0 }: { node: Node; depth?: number }) {
           <span
             style={{
               fontSize: 11,
-              color: '#94a3b8',
+              color: 'var(--color-text-secondary)',
               marginLeft: 'auto',
               fontFamily: 'monospace',
             }}
@@ -156,7 +161,7 @@ export default function AstView({ ast }: { ast: any }) {
         style={{
           padding: 20,
           textAlign: 'center',
-          color: '#94a3b8',
+          color: 'var(--color-text-secondary)',
           fontSize: 14,
         }}
       >
@@ -168,17 +173,17 @@ export default function AstView({ ast }: { ast: any }) {
     <div
       style={{
         marginTop: 16,
-        border: '1px solid rgba(100, 116, 139, 0.2)',
+        border: '1px solid var(--color-border)',
         borderRadius: 8,
         overflow: 'hidden',
-        background: '#fafafa',
+        background: 'var(--color-bg-secondary)',
       }}
     >
       <div
         style={{
           padding: '12px 16px',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderBottom: '1px solid rgba(100, 116, 139, 0.2)',
+          borderBottom: '1px solid var(--color-border)',
         }}
       >
         <h4
@@ -203,7 +208,7 @@ export default function AstView({ ast }: { ast: any }) {
           fontSize: 13,
           maxHeight: 480,
           overflowY: 'auto',
-          background: '#fff',
+          background: 'var(--color-bg-primary)',
         }}
       >
         <AstNode node={ast} depth={0} />
