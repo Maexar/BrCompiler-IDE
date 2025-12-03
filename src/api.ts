@@ -14,7 +14,7 @@ export interface CompileResponse {
   line?: number;
   column?: number;
   lines?: number;
-  errors?: CompileError[]; // NOVA LINHA: array de erros multiplos
+  errors?: CompileError[]; 
   ast?: any;
 }
 

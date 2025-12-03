@@ -1,0 +1,74 @@
+.tab-navigation {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tab-navigation::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tab-navigation::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tab-button:hover {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.tab-button.active {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.tab-icon {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.tab-label {
+  line-height: 1;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .tab-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .tab-icon {
+    font-size: 0.85rem;
+  }
+}
