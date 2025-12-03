@@ -1,9 +1,10 @@
 // src/components/ResultPanel/ResultPanel.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './ResultPanel.module.css';
-import type { CompileResponse } from '../../api';
+import type { CompileResponse, Token } from '../../api';
 import AstView from './AstView';
-import { fetchAST } from '../../api';
+import { TokensView } from './TokensView';
+import { fetchAST, fetchTokens } from '../../api';
 import { TabNavigation, type TabId, type Tab } from './TabNavigation';
 
 interface ResultPanelProps {
@@ -22,12 +23,29 @@ export function ResultPanel({ result, code }: ResultPanelProps) {
   const [localAst, setLocalAst] = useState<any | null>(null);
   const [astLoading, setAstLoading] = useState(false);
   const [astError, setAstError] = useState<string | null>(null);
+  
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [tokensLoading, setTokensLoading] = useState(false);
+  const [tokensError, setTokensError] = useState<string | null>(null);
+
+  const tokensRequestInProgress = useRef(false);
+  const astRequestInProgress = useRef(false);
+  const lastCodeForTokens = useRef<string>('');
+  const lastCodeForAst = useRef<string>('');
 
   useEffect(() => {
     setLocalAst(result?.ast ?? null);
     setAstError(null);
     setAstLoading(false);
+    setTokens([]);
+    setTokensError(null);
+    setTokensLoading(false);
     setActiveTab('resultado');
+
+    tokensRequestInProgress.current = false;
+    astRequestInProgress.current = false;
+    lastCodeForTokens.current = '';
+    lastCodeForAst.current = '';
   }, [result]);
 
   const handleTabChange = (tabId: TabId) => {
@@ -36,6 +54,10 @@ export function ResultPanel({ result, code }: ResultPanelProps) {
     if (tabId === 'arvore' && !localAst && !astLoading && !astError) {
       loadAst();
     }
+
+    if (tabId === 'tokens' && tokens.length === 0 && !tokensLoading && !tokensError) {
+      loadTokens();
+    }
   };
 
   const loadAst = async () => {
@@ -43,9 +65,24 @@ export function ResultPanel({ result, code }: ResultPanelProps) {
       setAstError('Codigo nao disponivel para gerar AST');
       return;
     }
+
+    // Prevenir múltiplas chamadas simultâneas
+    if (astRequestInProgress.current) {
+      console.log('[FRONTEND] Requisição de AST já em andamento, ignorando');
+      return;
+    }
+
+    // Se já carregou para este código, não carregar novamente
+    if (lastCodeForAst.current === code && localAst) {
+      console.log('[FRONTEND] AST já carregada para este código');
+      return;
+    }
+
+    astRequestInProgress.current = true;
     setAstLoading(true);
     setAstError(null);
     try {
+      console.log('[FRONTEND] Carregando AST...');
       const resp = await fetchAST(code);
       if (resp.success) {
         setLocalAst(resp.ast ?? null);
@@ -53,9 +90,50 @@ export function ResultPanel({ result, code }: ResultPanelProps) {
         setAstError(resp.error ?? 'Erro ao obter AST');
       }
     } catch (e) {
+      console.error('[FRONTEND] Erro ao carregar AST:', e);
       setAstError(String(e));
     } finally {
       setAstLoading(false);
+    }
+  };
+
+  const loadTokens = async () => {
+    if (!code) {
+      setTokensError('Codigo nao disponivel para gerar tokens');
+      return;
+    }
+
+    // Prevenir múltiplas chamadas simultâneas
+    if (tokensRequestInProgress.current) {
+      console.log('[FRONTEND] Requisição de tokens já em andamento, ignorando');
+      return;
+    }
+
+    // Se já carregou para este código, não carregar novamente
+    if (lastCodeForTokens.current === code && tokens.length > 0) {
+      console.log('[FRONTEND] Tokens já carregados para este código');
+      return;
+    }
+
+    tokensRequestInProgress.current = true;
+    setTokensLoading(true);
+    setTokensError(null);
+    try {
+      console.log('[FRONTEND] Carregando tokens...');
+      const resp = await fetchTokens(code);
+      if (resp.success && resp.tokens) {
+        setTokens(resp.tokens);
+        lastCodeForTokens.current = code;
+        console.log('[FRONTEND] Tokens carregados com sucesso:', resp.tokens.length);
+      } else {
+        setTokensError(resp.error ?? 'Erro ao obter tokens');
+      }
+    } catch (e) {
+      console.error('[FRONTEND] Erro ao carregar tokens:', e);
+      setTokensError(String(e));
+    } finally {
+      setTokensLoading(false);
+      tokensRequestInProgress.current = false;
     }
   };
 
@@ -180,12 +258,43 @@ export function ResultPanel({ result, code }: ResultPanelProps) {
   };
 
   const renderTokensTab = () => {
-    return (
-      <div className={styles.placeholder}>
-        <div className={styles['placeholder-icon']}>🔤</div>
-        <p>Visualizacao de tokens em desenvolvimento</p>
-      </div>
-    );
+    if (!code) {
+      return (
+        <div className={styles.placeholder}>
+          <div className={styles['placeholder-icon']}>🔤</div>
+          <p>Escreva codigo para visualizar os tokens</p>
+        </div>
+      );
+    }
+
+    if (tokensLoading) {
+      return (
+        <div className={styles.placeholder}>
+          <div className={styles['placeholder-icon']}>⏳</div>
+          <p>Carregando tokens...</p>
+        </div>
+      );
+    }
+
+    if (tokensError) {
+      return (
+        <div className={styles.placeholder}>
+          <div className={styles['placeholder-icon']}>❌</div>
+          <p style={{ color: 'var(--color-error)' }}>{tokensError}</p>
+        </div>
+      );
+    }
+
+    if (tokens.length === 0) {
+      return (
+        <div className={styles.placeholder}>
+          <div className={styles['placeholder-icon']}>📭</div>
+          <p>Nenhum token encontrado</p>
+        </div>
+      );
+    }
+
+    return <TokensView tokens={tokens} />;
   };
 
   const renderArvoreTab = () => {
