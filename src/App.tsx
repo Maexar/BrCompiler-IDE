@@ -4,11 +4,13 @@ import { useFileSystem } from './hooks/useFileSystem';
 import { useCodeEditor } from './hooks/useCodeEditor';
 import { useCompiler } from './hooks/useCompiler';
 import { useTheme } from './hooks/useTheme';
+import { useBeforeUnload } from './hooks/useBeforeUnload';
 import { Header } from './components/Header/Header';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { CodeEditor } from './components/Editor/CodeEditor';
 import { ResultPanel } from './components/ResultPanel/ResultPanel';
 import { Footer } from './components/Footer/Footer';
+import { UnsavedChangesDialog } from './components/UnsavedChangesDialog';
 import './App.css';
 import './styles/global.css';
 
@@ -27,6 +29,7 @@ function App() {
     createNewFile,
     openFile,
     saveFile,
+    syncFileContent,
     deleteFile,
     deleteFolder,
     toggleFolder,
@@ -55,21 +58,23 @@ function App() {
 
   const { connected, checkingConnection } = useCompiler();
   const { theme, toggleTheme } = useTheme();
+  const { getUnsavedFiles } = useBeforeUnload(files);
 
   // Estados locais
   const [result, setResult] = useState<CompileResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
-  // Auto-save quando currentFile ou code mudam
+  // Auto-sync do conteúdo (não remove o estado isDirty)
   useEffect(() => {
     if (currentFile && files.has(currentFile)) {
       const timer = setTimeout(() => {
-        saveFile(currentFile, code);
+        syncFileContent(currentFile, code);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [code, currentFile, files, saveFile]);
+  }, [code, currentFile, files, syncFileContent]);
 
   // Handlers
   const handleCompile = async () => {
@@ -165,6 +170,28 @@ function App() {
     deleteFolder(folderPath);
   };
 
+  // Handlers para salvar todos os arquivos não salvos
+  const handleSaveAllFiles = () => {
+    for (const [filePath, file] of files.entries()) {
+      if (file.isDirty) {
+        saveFile(filePath, file.content);
+      }
+    }
+    setShowUnsavedDialog(false);
+  };
+
+  // Handler para descartar alterações e prosseguir
+  const handleDiscardChanges = () => {
+    setShowUnsavedDialog(false);
+    // Como o beforeunload já foi tratado pelo navegador, 
+    // apenas fechamos o diálogo
+  };
+
+  // Handler para cancelar a ação
+  const handleCancelDialog = () => {
+    setShowUnsavedDialog(false);
+  };
+
   const currentFileObj = currentFile ? files.get(currentFile) : undefined;
 
   return (
@@ -246,6 +273,15 @@ function App() {
         directory="true"
         onChange={importFolder}
         style={{ display: 'none' }}
+      />
+
+      {/* Diálogo de confirmação para alterações não salvas */}
+      <UnsavedChangesDialog
+        isOpen={showUnsavedDialog}
+        unsavedFiles={getUnsavedFiles()}
+        onSaveAll={handleSaveAllFiles}
+        onDiscard={handleDiscardChanges}
+        onCancel={handleCancelDialog}
       />
     </div>
   );

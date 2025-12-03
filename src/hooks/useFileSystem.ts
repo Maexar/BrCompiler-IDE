@@ -107,6 +107,7 @@ export function useFileSystem() {
     return null;
   };
 
+  // Salva o arquivo e marca como não-dirty (usado quando o usuário clica em Salvar)
   const saveFile = (filePath: string, content: string) => {
     const updatedFiles = new Map(files);
     const file = updatedFiles.get(filePath);
@@ -118,6 +119,18 @@ export function useFileSystem() {
       updatedFiles.set(filePath, file);
       setFiles(updatedFiles);
       console.log(`[INFO] Arquivo salvo: ${filePath}`);
+    }
+  };
+
+  // Sincroniza o conteúdo sem alterar o estado isDirty (usado para auto-save em background)
+  const syncFileContent = (filePath: string, content: string) => {
+    const updatedFiles = new Map(files);
+    const file = updatedFiles.get(filePath);
+
+    if (file) {
+      file.content = content;
+      updatedFiles.set(filePath, file);
+      setFiles(updatedFiles);
     }
   };
 
@@ -433,6 +446,7 @@ export function useFileSystem() {
     createNewFile,
     openFile,
     saveFile,
+    syncFileContent,
     deleteFile,
     deleteFolder,
     toggleFolder,
