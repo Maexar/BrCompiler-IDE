@@ -32,6 +32,65 @@
   margin-left: 0.15rem;
 }
 
+/* ===== BARRA DE RESUMO DE ERROS ===== */
+
+.error-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.error-summary-icon {
+  color: #ef4444;
+  font-size: 1rem;
+}
+
+.error-summary-text {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.error-summary-badges {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.error-badge {
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.error-badge-syntax {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.error-badge-semantic {
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+}
+
+.error-badge-lexical {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
+.error-badge-balance {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+/* ===== AREA DO EDITOR ===== */
+
 .editor-wrapper {
   display: flex;
   flex: 1;
@@ -39,9 +98,19 @@
   background: var(--color-bg-primary);
 }
 
-.code-editor {
+.editor-content {
   flex: 1;
-  background: var(--color-bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.code-editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
   color: var(--color-text-primary);
   border: none;
   font-family: var(--font-family-mono);
@@ -53,6 +122,7 @@
   -moz-tab-size: 2;
   overflow: auto;
   padding: 0;
+  z-index: 2;
 }
 
 .code-editor::placeholder {
@@ -64,6 +134,96 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ===== OVERLAY DE REALCE DE ERROS ===== */
+
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.overlay-line {
+  height: calc(var(--font-size) * var(--line-height));
+  width: 100%;
+}
+
+.overlay-line-error {
+  height: calc(var(--font-size) * var(--line-height));
+  width: 100%;
+  transition: background-color 0.15s ease;
+}
+
+/* Erro Sintatico - Vermelho */
+.overlay-error-syntax {
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 2px solid #ef4444;
+}
+
+/* Erro Semantico - Laranja */
+.overlay-error-semantic {
+  background: rgba(249, 115, 22, 0.08);
+  border-left: 2px solid #f97316;
+}
+
+/* Erro Lexico - Amarelo */
+.overlay-error-lexical {
+  background: rgba(234, 179, 8, 0.08);
+  border-left: 2px solid #eab308;
+}
+
+/* Erro de Balanceamento - Roxo */
+.overlay-error-balance {
+  background: rgba(168, 85, 247, 0.08);
+  border-left: 2px solid #a855f7;
+}
+
+/* Linha selecionada (quando clica no numero da linha) */
+.overlay-line-selected {
+  background: rgba(239, 68, 68, 0.15) !important;
+  animation: pulse-error 1s ease-in-out;
+}
+
+@keyframes pulse-error {
+  0% {
+    background: rgba(239, 68, 68, 0.3);
+  }
+  100% {
+    background: rgba(239, 68, 68, 0.15);
+  }
+}
+
+/* ===== TEMA ESCURO ===== */
+
+[data-theme="dark"] .error-summary {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .overlay-error-syntax {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+[data-theme="dark"] .overlay-error-semantic {
+  background: rgba(249, 115, 22, 0.12);
+}
+
+[data-theme="dark"] .overlay-error-lexical {
+  background: rgba(234, 179, 8, 0.12);
+}
+
+[data-theme="dark"] .overlay-error-balance {
+  background: rgba(168, 85, 247, 0.12);
+}
+
+[data-theme="dark"] .overlay-line-selected {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* ===== RODAPE ===== */
 
 .editor-footer {
   padding: 0.4rem 0.6rem;

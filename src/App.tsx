@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { compileCode, type CompileResponse } from './api';
+import { useState, useEffect, useMemo } from 'react';
+import { compileCode, extractEditorErrors, type CompileResponse, type EditorError } from './api';
 import { useFileSystem } from './hooks/useFileSystem';
 import { useCodeEditor } from './hooks/useCodeEditor';
 import { useCompiler } from './hooks/useCompiler';
@@ -66,7 +66,15 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
-  // Auto-sync do conteúdo (não remove o estado isDirty)
+  // Extrai erros do resultado da compilacao
+  const editorErrors: EditorError[] = useMemo(() => {
+    if (!result || result.success) {
+      return [];
+    }
+    return extractEditorErrors(result);
+  }, [result]);
+
+  // Auto-sync do conteudo (nao remove o estado isDirty)
   useEffect(() => {
     if (currentFile && files.has(currentFile)) {
       const timer = setTimeout(() => {
@@ -75,6 +83,17 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [code, currentFile, files, syncFileContent]);
+
+  // Limpa erros quando o codigo muda
+  useEffect(() => {
+    // Se o usuario esta digitando, limpa os erros apos um delay
+    // para nao mostrar erros durante a digitacao
+    const timer = setTimeout(() => {
+      // Nao limpa imediatamente para permitir que o usuario veja os erros
+      // Os erros serao limpos na proxima compilacao
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [code]);
 
   // Handlers
   const handleCompile = async () => {
@@ -124,7 +143,7 @@ function App() {
     const file = openFile(filePath);
     if (file) {
       setCode(file.content);
-      setResult(null);
+      setResult(null); // Limpa erros ao trocar de arquivo
     }
   };
 
@@ -132,6 +151,7 @@ function App() {
     const newFile = createNewFile(fileName);
     if (newFile) {
       setCode(newFile.content);
+      setResult(null); // Limpa erros ao criar novo arquivo
     }
   };
 
@@ -142,6 +162,7 @@ function App() {
     } else {
       setCode('');
     }
+    setResult(null); // Limpa erros ao deletar arquivo
   };
 
   const handleClearEditor = () => {
@@ -170,7 +191,7 @@ function App() {
     deleteFolder(folderPath);
   };
 
-  // Handlers para salvar todos os arquivos não salvos
+  // Handlers para salvar todos os arquivos nao salvos
   const handleSaveAllFiles = () => {
     for (const [filePath, file] of files.entries()) {
       if (file.isDirty) {
@@ -180,14 +201,12 @@ function App() {
     setShowUnsavedDialog(false);
   };
 
-  // Handler para descartar alterações e prosseguir
+  // Handler para descartar alteracoes e prosseguir
   const handleDiscardChanges = () => {
     setShowUnsavedDialog(false);
-    // Como o beforeunload já foi tratado pelo navegador, 
-    // apenas fechamos o diálogo
   };
 
-  // Handler para cancelar a ação
+  // Handler para cancelar a acao
   const handleCancelDialog = () => {
     setShowUnsavedDialog(false);
   };
@@ -239,6 +258,7 @@ function App() {
               canUndo={canUndo}
               canRedo={canRedo}
               lineNumbersRef={lineNumbersRef}
+              errors={editorErrors}
               onCodeChange={handleCodeChange}
               onKeyDown={handleKeyDown}
               onScroll={handleScroll}
@@ -257,7 +277,7 @@ function App() {
 
       <Footer />
 
-      {/* Hidden inputs para importação */}
+      {/* Hidden inputs para importacao */}
       <input
         ref={fileInputRef}
         type="file"
@@ -275,7 +295,7 @@ function App() {
         style={{ display: 'none' }}
       />
 
-      {/* Diálogo de confirmação para alterações não salvas */}
+      {/* Dialogo de confirmacao para alteracoes nao salvas */}
       <UnsavedChangesDialog
         isOpen={showUnsavedDialog}
         unsavedFiles={getUnsavedFiles()}

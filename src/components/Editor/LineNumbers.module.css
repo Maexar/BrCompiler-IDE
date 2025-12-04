@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  user-select: none;
 }
 
 .line-number {
@@ -15,4 +16,117 @@
   padding: 0 0.5rem;
   color: var(--color-text-secondary);
   text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+.line-number:hover {
+  background: var(--color-bg-hover);
+}
+
+.line-number-text {
+  min-width: 1.5em;
+  text-align: right;
+}
+
+/* ===== INDICADOR DE ERRO ===== */
+
+.error-indicator {
+  font-weight: bold;
+  font-size: 0.75em;
+  width: 1em;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ===== ESTILOS DE ERRO POR TIPO ===== */
+
+/* Erro Sintatico - Vermelho */
+.line-error-syntax {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-left: 3px solid #ef4444;
+}
+
+.line-error-syntax .error-indicator {
+  background: #ef4444;
+  color: white;
+}
+
+.line-error-syntax:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Erro Semantico - Laranja */
+.line-error-semantic {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border-left: 3px solid #f97316;
+}
+
+.line-error-semantic .error-indicator {
+  background: #f97316;
+  color: white;
+}
+
+.line-error-semantic:hover {
+  background: rgba(249, 115, 22, 0.25);
+}
+
+/* Erro Lexico - Amarelo */
+.line-error-lexical {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+  border-left: 3px solid #eab308;
+}
+
+.line-error-lexical .error-indicator {
+  background: #eab308;
+  color: white;
+}
+
+.line-error-lexical:hover {
+  background: rgba(234, 179, 8, 0.25);
+}
+
+/* Erro de Balanceamento - Roxo */
+.line-error-balance {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  border-left: 3px solid #a855f7;
+}
+
+.line-error-balance .error-indicator {
+  background: #a855f7;
+  color: white;
+}
+
+.line-error-balance:hover {
+  background: rgba(168, 85, 247, 0.25);
+}
+
+/* ===== TEMA ESCURO ===== */
+
+[data-theme="dark"] .line-error-syntax {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .line-error-semantic {
+  background: rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="dark"] .line-error-lexical {
+  background: rgba(234, 179, 8, 0.2);
+}
+
+[data-theme="dark"] .line-error-balance {
+  background: rgba(168, 85, 247, 0.2);
 }

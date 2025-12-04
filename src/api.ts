@@ -1,4 +1,4 @@
-// ===== INTERFACES DE ERRO =====
+// ===== TIPOS DE ERROS =====
 
 export interface CompileError {
   message: string;
@@ -17,7 +17,31 @@ export interface SemanticError {
   identifier?: string;
 }
 
-// ===== INTERFACES DE RESPOSTA =====
+export interface SymbolInfo {
+  name: string;
+  type: string;
+  scope: string;
+  line: number;
+  initialized?: boolean;
+  used?: boolean;
+}
+
+export interface FunctionInfo {
+  name: string;
+  returnType: string;
+  scope: string;
+  line: number;
+  paramCount: number;
+  signature: string;
+  used?: boolean;
+}
+
+export interface SymbolsData {
+  variables: SymbolInfo[];
+  functions: FunctionInfo[];
+}
+
+// ===== RESPOSTAS DA API =====
 
 export interface CompileResponse {
   success: boolean;
@@ -26,20 +50,13 @@ export interface CompileResponse {
   line?: number;
   column?: number;
   lines?: number;
-  
-  // Arrays separados para erros sintaticos e semanticos
+  errors?: CompileError[];
   syntaxErrors?: CompileError[];
   semanticErrors?: SemanticError[];
-  
-  // Array unificado para retrocompatibilidade
-  errors?: CompileError[];
-  
-  // Informacoes da tabela de simbolos
   symbols?: {
     variables: number;
     functions: number;
   };
-  
   ast?: any;
 }
 
@@ -62,43 +79,27 @@ export interface TokensResponse {
   error?: string;
 }
 
-// ===== NOVAS INTERFACES PARA TABELA DE SIMBOLOS =====
-
-export interface Variable {
-  name: string;
-  type: string;
-  scope: string;
-  line: number;
-  initialized: boolean;
-  used: boolean;
-}
-
-export interface Function {
-  name: string;
-  returnType: string;
-  scope: string;
-  line: number;
-  paramCount: number;
-  signature: string;
-  used: boolean;
-}
-
-export interface SymbolTable {
-  variables: Variable[];
-  functions: Function[];
-}
-
 export interface SymbolsResponse {
   success: boolean;
-  symbols?: SymbolTable;
+  symbols?: SymbolsData;
   error?: string;
 }
 
-// ===== CONFIGURACAO DA API =====
+// ===== TIPO UNIFICADO DE ERRO PARA A IDE =====
+
+export interface EditorError {
+  message: string;
+  line: number;
+  column: number;
+  type: 'syntax' | 'semantic' | 'lexical' | 'balance';
+  identifier?: string;
+}
+
+// ===== URL DA API =====
 
 const API_URL = "http://localhost:8085/api";
 
-// ===== FUNCOES DE COMPILACAO =====
+// ===== FUNCOES DA API =====
 
 export async function compileCode(code: string): Promise<CompileResponse> {
   try {
@@ -124,8 +125,6 @@ export async function compileCode(code: string): Promise<CompileResponse> {
   }
 }
 
-// ===== FUNCOES DE AST =====
-
 export async function fetchAST(code: string): Promise<AstResponse> {
   try {
     const response = await fetch(`${API_URL}/ast`, {
@@ -133,18 +132,14 @@ export async function fetchAST(code: string): Promise<AstResponse> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code })
     });
-    
     if (!response.ok) {
       return { success: false, error: `Erro HTTP ${response.status}` };
     }
-    
     return await response.json();
   } catch (error) {
     return { success: false, error: `Erro ao conectar: ${error}` };
   }
 }
-
-// ===== FUNCOES DE TOKENS =====
 
 export async function fetchTokens(code: string): Promise<TokensResponse> {
   console.log('[FRONTEND] Iniciando fetchTokens');
@@ -179,8 +174,6 @@ export async function fetchTokens(code: string): Promise<TokensResponse> {
   }
 }
 
-// ===== NOVA FUNCAO: TABELA DE SIMBOLOS =====
-
 export async function fetchSymbols(code: string): Promise<SymbolsResponse> {
   console.log('[FRONTEND] Iniciando fetchSymbols');
   try {
@@ -195,28 +188,20 @@ export async function fetchSymbols(code: string): Promise<SymbolsResponse> {
     });
     
     clearTimeout(timeoutId);
-    console.log('[FRONTEND] Resposta de symbols recebida:', response.status);
     
     if (!response.ok) {
-      console.error('[FRONTEND] Erro HTTP:', response.status);
       return { success: false, error: `Erro HTTP ${response.status}` };
     }
     
-    const result = await response.json();
-    console.log('[FRONTEND] Tabela de simbolos parseada com sucesso');
-    console.log('[FRONTEND] Variaveis:', result.symbols?.variables?.length || 0);
-    console.log('[FRONTEND] Funcoes:', result.symbols?.functions?.length || 0);
-    return result;
+    return await response.json();
   } catch (error) {
-    console.error('[FRONTEND] Erro ao buscar tabela de simbolos:', error);
+    console.error('[FRONTEND] Erro ao buscar simbolos:', error);
     if (error instanceof Error && error.name === 'AbortError') {
       return { success: false, error: 'Timeout: requisicao demorou mais de 10 segundos' };
     }
     return { success: false, error: `Erro ao conectar: ${error}` };
   }
 }
-
-// ===== FUNCAO DE HEALTH CHECK =====
 
 export async function checkHealth(): Promise<boolean> {
   try {
@@ -227,73 +212,64 @@ export async function checkHealth(): Promise<boolean> {
   }
 }
 
-// ===== FUNCOES AUXILIARES =====
+// ===== FUNCAO UTILITARIA PARA EXTRAIR ERROS UNIFICADOS =====
 
-/**
- * Verifica se ha erros sintaticos na resposta de compilacao
- */
-export function hasSyntaxErrors(response: CompileResponse): boolean {
-  if (response.success) {
-    return false;
+export function extractEditorErrors(response: CompileResponse): EditorError[] {
+  const errors: EditorError[] = [];
+  
+  // Extrai erros do array "errors" (compatibilidade)
+  if (response.errors) {
+    for (const err of response.errors) {
+      let errorType: EditorError['type'] = 'syntax';
+      
+      // Detecta tipo pelo contexto ou mensagem
+      if (err.context === 'semantico' || err.message.includes('[SEMANTICO]')) {
+        errorType = 'semantic';
+      } else if (err.context === 'lexico') {
+        errorType = 'lexical';
+      } else if (err.context === 'balanceamento') {
+        errorType = 'balance';
+      }
+      
+      errors.push({
+        message: err.message.replace('[SINTAXE] ', '').replace('[SEMANTICO] ', ''),
+        line: err.line,
+        column: err.column,
+        type: errorType
+      });
+    }
   }
   
-  const hasSyntax = response.syntaxErrors !== undefined && response.syntaxErrors.length > 0;
-  const hasGeneric = response.errors !== undefined && response.errors.length > 0;
-  
-  return hasSyntax || hasGeneric;
-}
-
-/**
- * Verifica se ha erros semanticos na resposta de compilacao
- */
-export function hasSemanticErrors(response: CompileResponse): boolean {
-  if (response.success) {
-    return false;
-  }
-  
-  return response.semanticErrors !== undefined && response.semanticErrors.length > 0;
-}
-
-/**
- * Retorna todos os erros (sintaticos e semanticos) de forma unificada
- */
-export function getAllErrors(response: CompileResponse): Array<CompileError | SemanticError> {
-  const errors: Array<CompileError | SemanticError> = [];
-  
+  // Extrai erros sintaticos separados
   if (response.syntaxErrors) {
-    errors.push(...response.syntaxErrors);
+    for (const err of response.syntaxErrors) {
+      // Evita duplicatas
+      if (!errors.some(e => e.line === err.line && e.column === err.column && e.type === 'syntax')) {
+        errors.push({
+          message: err.message,
+          line: err.line,
+          column: err.column,
+          type: 'syntax'
+        });
+      }
+    }
   }
   
+  // Extrai erros semanticos separados
   if (response.semanticErrors) {
-    errors.push(...response.semanticErrors);
-  }
-  
-  // Fallback para retrocompatibilidade
-  if (errors.length === 0 && response.errors) {
-    errors.push(...response.errors);
+    for (const err of response.semanticErrors) {
+      // Evita duplicatas
+      if (!errors.some(e => e.line === err.line && e.column === err.column && e.type === 'semantic')) {
+        errors.push({
+          message: err.message,
+          line: err.line,
+          column: err.column,
+          type: 'semantic',
+          identifier: err.identifier
+        });
+      }
+    }
   }
   
   return errors;
 }
-
-/**
- * Formata erro para exibicao
- */
-export function formatError(error: CompileError | SemanticError): string {
-  let prefix = '[ERRO]';
-  
-  if ('type' in error) {
-    // Erro semantico
-    prefix = '[SEMANTICO]';
-  } else if (error.context) {
-    // Erro sintatico com contexto
-    prefix = '[SINTAXE]';
-  }
-  
-  const location = error.line > 0 
-    ? ` [linha ${error.line}${error.column > 0 ? `, coluna ${error.column}` : ''}]`
-    : '';
-  
-  return `${prefix}${location}: ${error.message}`;
-}
-
